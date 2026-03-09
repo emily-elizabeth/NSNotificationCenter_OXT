@@ -1,0 +1,14 @@
+import module org.openxtalk.nsnotificationcenter
+  use com.livecode.foreign
+  use com.livecode.engine
+  use com.livecode.logic
+  foreign handler type NotificationCallbackType(in pName as ZStringNative, in pUserInfo as ZStringNative) returns nothing
+  handler OnNotification(in pName as ZStringNative, in pUserInfo as ZStringNative) returns nothing
+  handler macNotificationsAddObserver(in pName as String) returns nothing
+  handler macNotificationsRemoveObserver(in pName as String) returns nothing
+  handler macNotificationsRemoveAllObservers() returns nothing
+  handler macWorkspaceAddObserver(in pName as String) returns nothing
+  handler macWorkspaceRemoveObserver(in pName as String) returns nothing
+  handler macWorkspaceRemoveAllObservers() returns nothing
+  handler macNotificationsPostTest() returns nothing
+end module

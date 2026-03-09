@@ -1,0 +1,20 @@
+<package version="0.0">
+  <name>org.openxtalk.nsnotificationcenter</name>
+  <title>NSNotificationCenter Library</title>
+  <author>Emily-Elizabeth Howard</author>
+  <version>1.0.0</version>
+  <platforms>mac</platforms>
+  <license>community</license>
+  <type>library</type>
+  <requires name="com.livecode.foreign"/>
+  <requires name="com.livecode.engine"/>
+  <requires name="com.livecode.logic"/>
+  <handler name="OnNotification" parameters="in ZStringNative,in ZStringNative" return="nothing"/>
+  <handler name="macNotificationsAddObserver" parameters="in string" return="nothing"/>
+  <handler name="macNotificationsRemoveObserver" parameters="in string" return="nothing"/>
+  <handler name="macNotificationsRemoveAllObservers" parameters="" return="nothing"/>
+  <handler name="macWorkspaceAddObserver" parameters="in string" return="nothing"/>
+  <handler name="macWorkspaceRemoveObserver" parameters="in string" return="nothing"/>
+  <handler name="macWorkspaceRemoveAllObservers" parameters="" return="nothing"/>
+  <handler name="macNotificationsPostTest" parameters="" return="nothing"/>
+</package>

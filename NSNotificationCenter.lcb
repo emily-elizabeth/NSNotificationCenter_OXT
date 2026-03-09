@@ -1,0 +1,166 @@
+/**
+ * NSNotificationCenter.lcb
+ *
+ * LiveCode Builder library for listening to macOS system notifications.
+ * All ObjC work is handled by NSNotificationGlue.dylib — this file
+ * simply registers a C callback and dispatches received notifications
+ * to the calling script object.
+ *
+ * Author: Emily-Elizabeth Howard
+ *
+ * Usage (LiveCode Script):
+ *   macNotificationsAddObserver kMacNotifyAppearanceChanged
+ *   macWorkspaceAddObserver kMacNotifySystemWillSleep
+ *
+ *   on macNotification pName, pUserInfo
+ *     answer "Got: " & pName
+ *   end macNotification
+ *
+ *   macNotificationsRemoveAllObservers
+ *   macWorkspaceRemoveAllObservers
+ */
+
+library org.openxtalk.nsnotificationcenter
+
+metadata version is "1.0.0"
+metadata author is "Emily-Elizabeth Howard"
+metadata title is "NSNotificationCenter Library"
+metadata platforms is "mac"
+
+use com.livecode.engine
+use com.livecode.foreign
+
+-- -------------------------------------------------------------------------
+-- Foreign handlers binding to NSNotificationGlue.dylib
+-- -------------------------------------------------------------------------
+
+-- Callback type — matches toolbar pattern exactly.
+public foreign handler type NotificationCallbackType( \
+    in pName     as ZStringNative, \
+    in pUserInfo as ZStringNative) \
+    returns nothing
+
+foreign handler Glue_SetCallback( \
+    in pCallback as NotificationCallbackType) \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_set_callback"
+
+foreign handler Glue_AddDistributed( \
+    in pName as ZStringNative) \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_add_distributed"
+
+foreign handler Glue_AddWorkspace( \
+    in pName as ZStringNative) \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_add_workspace"
+
+foreign handler Glue_RemoveDistributed( \
+    in pName as ZStringNative) \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_remove_distributed"
+
+foreign handler Glue_RemoveWorkspace( \
+    in pName as ZStringNative) \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_remove_workspace"
+
+foreign handler Glue_RemoveAllDistributed() \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_remove_all_distributed"
+
+foreign handler Glue_RemoveAllWorkspace() \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_remove_all_workspace"
+
+foreign handler Glue_PostDistributed( \
+    in pName as ZStringNative) \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_post_distributed"
+
+-- -------------------------------------------------------------------------
+-- Callback implementation and module state
+-- -------------------------------------------------------------------------
+
+private variable mTarget as ScriptObject
+private variable mCallbackRegistered as Boolean
+
+public handler OnNotification( \
+        in pName     as ZStringNative, \
+        in pUserInfo as ZStringNative) \
+    returns nothing
+    post "macNotification" to mTarget with [pName, pUserInfo]
+end handler
+
+private handler EnsureCallbackRegistered() returns nothing
+    if not mCallbackRegistered then
+        unsafe
+            Glue_SetCallback(OnNotification)
+        end unsafe
+        put true into mCallbackRegistered
+    end if
+end handler
+
+-- -------------------------------------------------------------------------
+-- Distributed notification center API
+-- Use for: appearance, screen saver, screen lock, Spotify, network etc.
+-- -------------------------------------------------------------------------
+
+public handler macNotificationsAddObserver(in pName as String) returns nothing
+    put the caller into mTarget
+    EnsureCallbackRegistered()
+    unsafe
+        Glue_AddDistributed(pName)
+    end unsafe
+end handler
+
+public handler macNotificationsRemoveObserver(in pName as String) returns nothing
+    unsafe
+        Glue_RemoveDistributed(pName)
+    end unsafe
+end handler
+
+public handler macNotificationsRemoveAllObservers() returns nothing
+    unsafe
+        Glue_RemoveAllDistributed()
+    end unsafe
+end handler
+
+-- -------------------------------------------------------------------------
+-- Workspace notification center API
+-- Use for: sleep, wake, volume mount, app activation etc.
+-- Call after stack is fully open — not in preOpenStack/openStack.
+-- -------------------------------------------------------------------------
+
+public handler macWorkspaceAddObserver(in pName as String) returns nothing
+    put the caller into mTarget
+    EnsureCallbackRegistered()
+    unsafe
+        Glue_AddWorkspace(pName)
+    end unsafe
+end handler
+
+public handler macWorkspaceRemoveObserver(in pName as String) returns nothing
+    unsafe
+        Glue_RemoveWorkspace(pName)
+    end unsafe
+end handler
+
+public handler macWorkspaceRemoveAllObservers() returns nothing
+    unsafe
+        Glue_RemoveAllWorkspace()
+    end unsafe
+end handler
+
+-- -------------------------------------------------------------------------
+-- Debug / test helpers
+-- -------------------------------------------------------------------------
+
+-- Post a test distributed notification. Register "test.notification" first.
+public handler macNotificationsPostTest() returns nothing
+    unsafe
+        Glue_PostDistributed("test.notification")
+    end unsafe
+end handler
+
+end library

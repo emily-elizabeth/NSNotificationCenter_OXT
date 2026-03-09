@@ -1,0 +1,161 @@
+Name: macNotificationsAddObserver
+Type: command
+Syntax: macNotificationsAddObserver <pName>
+Summary: Register an observer for a distributed macOS notification.
+Parameters:
+pName: The notification name string to observe.
+Description:
+Registers the calling script object as a listener for the named distributed notification.
+When the notification fires, a `macNotification` message is sent to the calling object with
+two parameters: the notification name and a string representation of the userInfo dictionary.
+
+Use `macNotificationsRemoveObserver` or `macNotificationsRemoveAllObservers` to clean up
+when the object closes.
+
+Distributed notifications are broadcast system-wide via NSDistributedNotificationCenter.
+Use this for appearance changes, media player events, screen saver and lock events,
+network changes, and other app-to-app notifications.
+
+Note: Pass the raw notification name string. LCB public constants are not accessible
+from LiveCode Script scope — define your own LiveCode Script constants if needed.
+
+Example:
+macNotificationsAddObserver "AppleInterfaceThemeChangedNotification"
+macNotificationsAddObserver "com.apple.Music.playerInfo"
+macNotificationsAddObserver "com.apple.screensaver.didstart"
+
+on macNotification pName, pUserInfo
+  switch pName
+    case "AppleInterfaceThemeChangedNotification"
+      -- respond to dark/light mode change
+      break
+    case "com.apple.Music.playerInfo"
+      -- track changed in Music.app
+      break
+  end switch
+end macNotification
+
+Tags: mac, notifications, system
+
+---
+
+Name: macNotificationsRemoveObserver
+Type: command
+Syntax: macNotificationsRemoveObserver <pName>
+Summary: Remove a single distributed notification observer by name.
+Parameters:
+pName: The notification name string previously passed to macNotificationsAddObserver.
+Description:
+Removes the observer registered for the given distributed notification name.
+Has no effect if the name was not previously registered.
+
+Example:
+macNotificationsRemoveObserver "AppleInterfaceThemeChangedNotification"
+
+Tags: mac, notifications, system
+
+---
+
+Name: macNotificationsRemoveAllObservers
+Type: command
+Syntax: macNotificationsRemoveAllObservers
+Summary: Remove all distributed notification observers.
+Description:
+Removes all observers previously registered with `macNotificationsAddObserver`.
+Call this in `closeStack` or when the object no longer needs to receive notifications.
+
+Example:
+on closeStack
+  macNotificationsRemoveAllObservers
+  macWorkspaceRemoveAllObservers
+end closeStack
+
+Tags: mac, notifications, system
+
+---
+
+Name: macWorkspaceAddObserver
+Type: command
+Syntax: macWorkspaceAddObserver <pName>
+Summary: Register an observer for an NSWorkspace notification.
+Parameters:
+pName: The workspace notification name string to observe.
+Description:
+Registers the calling script object as a listener for the named NSWorkspace notification.
+When the notification fires, a `macNotification` message is sent to the calling object with
+two parameters: the notification name and a string representation of the userInfo dictionary.
+
+NSWorkspace notifications include system sleep/wake, screen sleep/wake, volume mount/unmount,
+and active application changes.
+
+Important: Do not call this from `preOpenStack` or `openStack`. Use a short
+`send ... in 0 milliseconds` delay or call from `openCard` to ensure the workspace
+notification center is ready.
+
+Note: Pass the raw notification name string. LCB public constants are not accessible
+from LiveCode Script scope — define your own LiveCode Script constants if needed.
+
+Example:
+send "registerWorkspace" to me in 0 milliseconds
+
+on registerWorkspace
+  macWorkspaceAddObserver "NSWorkspaceWillSleepNotification"
+  macWorkspaceAddObserver "NSWorkspaceDidMountNotification"
+end registerWorkspace
+
+Tags: mac, notifications, system, workspace
+
+---
+
+Name: macWorkspaceRemoveObserver
+Type: command
+Syntax: macWorkspaceRemoveObserver <pName>
+Summary: Remove a single NSWorkspace notification observer by name.
+Parameters:
+pName: The workspace notification name string previously passed to macWorkspaceAddObserver.
+Description:
+Removes the observer registered for the given workspace notification name.
+Has no effect if the name was not previously registered.
+
+Example:
+macWorkspaceRemoveObserver "NSWorkspaceWillSleepNotification"
+
+Tags: mac, notifications, system, workspace
+
+---
+
+Name: macWorkspaceRemoveAllObservers
+Type: command
+Syntax: macWorkspaceRemoveAllObservers
+Summary: Remove all NSWorkspace notification observers.
+Description:
+Removes all observers previously registered with `macWorkspaceAddObserver`.
+Call this in `closeStack` or when the object no longer needs to receive workspace notifications.
+
+Example:
+on closeStack
+  macNotificationsRemoveAllObservers
+  macWorkspaceRemoveAllObservers
+end closeStack
+
+Tags: mac, notifications, system, workspace
+
+---
+
+Name: macNotificationsPostTest
+Type: command
+Syntax: macNotificationsPostTest
+Summary: Post a test distributed notification for development purposes.
+Description:
+Posts a distributed notification named `test.notification` via NSDistributedNotificationCenter.
+Register an observer for `"test.notification"` before calling this to verify the callback
+pipeline is working end-to-end.
+
+This handler is intended for development use only and should not be called in production.
+
+Example:
+macNotificationsAddObserver "test.notification"
+macNotificationsPostTest
+-- triggers: on macNotification pName, pUserInfo with pName = "test.notification"
+
+Tags: mac, notifications, debug, test
