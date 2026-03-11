@@ -22,7 +22,7 @@
 
 library org.openxtalk.nsnotificationcenter
 
-metadata version is "1.0.0"
+metadata version is "1.1.0"
 metadata author is "Emily-Elizabeth Howard"
 metadata title is "NSNotificationCenter Library"
 metadata platforms is "mac"
@@ -155,6 +155,13 @@ end handler
 -- -------------------------------------------------------------------------
 -- Debug / test helpers
 -- -------------------------------------------------------------------------
+
+-- Post a distributed notification by name to all listening applications.
+public handler macNotificationsPost(in pName as String) returns nothing
+    unsafe
+        Glue_PostDistributed(pName)
+    end unsafe
+end handler
 
 -- Post a test distributed notification. Register "test.notification" first.
 public handler macNotificationsPostTest() returns nothing

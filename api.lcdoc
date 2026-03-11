@@ -9,12 +9,12 @@ Registers the calling script object as a listener for the named distributed noti
 When the notification fires, a `macNotification` message is sent to the calling object with
 two parameters: the notification name and a string representation of the userInfo dictionary.
 
-Use `macNotificationsRemoveObserver` or `macNotificationsRemoveAllObservers` to clean up
-when the object closes.
-
 Distributed notifications are broadcast system-wide via NSDistributedNotificationCenter.
 Use this for appearance changes, media player events, screen saver and lock events,
 network changes, and other app-to-app notifications.
+
+Use `macNotificationsRemoveObserver` or `macNotificationsRemoveAllObservers` to clean up
+when the object closes.
 
 Note: Pass the raw notification name string. LCB public constants are not accessible
 from LiveCode Script scope — define your own LiveCode Script constants if needed.
@@ -25,14 +25,14 @@ macNotificationsAddObserver "com.apple.Music.playerInfo"
 macNotificationsAddObserver "com.apple.screensaver.didstart"
 
 on macNotification pName, pUserInfo
-  switch pName
-    case "AppleInterfaceThemeChangedNotification"
-      -- respond to dark/light mode change
-      break
-    case "com.apple.Music.playerInfo"
-      -- track changed in Music.app
-      break
-  end switch
+   switch pName
+      case "AppleInterfaceThemeChangedNotification"
+         -- respond to dark/light mode change
+         break
+      case "com.apple.Music.playerInfo"
+         -- track changed in Music.app
+         break
+   end switch
 end macNotification
 
 Tags: mac, notifications, system
@@ -66,11 +66,60 @@ Call this in `closeStack` or when the object no longer needs to receive notifica
 
 Example:
 on closeStack
-  macNotificationsRemoveAllObservers
-  macWorkspaceRemoveAllObservers
+   macNotificationsRemoveAllObservers
+   macWorkspaceRemoveAllObservers
 end closeStack
 
 Tags: mac, notifications, system
+
+---
+
+Name: macNotificationsPost
+Type: command
+Syntax: macNotificationsPost <pName>
+Summary: Broadcast a distributed notification to all listening applications.
+Parameters:
+pName: The notification name string to post.
+Description:
+Posts a named notification to NSDistributedNotificationCenter with deliverImmediately set
+to YES. Any application — including other instances of your own app — that has registered
+an observer for this name will receive it via their `macNotification` handler.
+
+Use a reverse-DNS style name to avoid collisions with system notifications.
+
+Example:
+macNotificationsPost "com.mycompany.myapp.dataUpdated"
+
+on macNotification pName, pUserInfo
+   if pName is "com.mycompany.myapp.dataUpdated" then
+      -- refresh data
+   end if
+end macNotification
+
+Tags: mac, notifications, broadcast
+
+---
+
+Name: macNotificationsPostTest
+Type: command
+Syntax: macNotificationsPostTest
+Summary: Post a test distributed notification for development purposes.
+Description:
+Posts a distributed notification named `test.notification` via NSDistributedNotificationCenter.
+Register an observer for `"test.notification"` before calling this to verify the callback
+pipeline is working end-to-end.
+
+This handler is intended for development use only and should not be called in production.
+
+Example:
+macNotificationsAddObserver "test.notification"
+macNotificationsPostTest
+
+on macNotification pName, pUserInfo
+   put pName & ": " & pUserInfo into field "log"
+end macNotification
+
+Tags: mac, notifications, debug, test
 
 ---
 
@@ -88,20 +137,21 @@ two parameters: the notification name and a string representation of the userInf
 NSWorkspace notifications include system sleep/wake, screen sleep/wake, volume mount/unmount,
 and active application changes.
 
-Important: Do not call this from `preOpenStack` or `openStack`. Use a short
-`send ... in 0 milliseconds` delay or call from `openCard` to ensure the workspace
-notification center is ready.
+Do not call this from `preOpenStack` or `openStack`. Use a `send ... in 0 milliseconds`
+delay to ensure the workspace notification center is ready.
 
 Note: Pass the raw notification name string. LCB public constants are not accessible
 from LiveCode Script scope — define your own LiveCode Script constants if needed.
 
 Example:
-send "registerWorkspace" to me in 0 milliseconds
+on openStack
+   send "registerWorkspaceObservers" to me in 0 milliseconds
+end openStack
 
-on registerWorkspace
-  macWorkspaceAddObserver "NSWorkspaceWillSleepNotification"
-  macWorkspaceAddObserver "NSWorkspaceDidMountNotification"
-end registerWorkspace
+on registerWorkspaceObservers
+   macWorkspaceAddObserver "NSWorkspaceWillSleepNotification"
+   macWorkspaceAddObserver "NSWorkspaceDidMountNotification"
+end registerWorkspaceObservers
 
 Tags: mac, notifications, system, workspace
 
@@ -134,28 +184,8 @@ Call this in `closeStack` or when the object no longer needs to receive workspac
 
 Example:
 on closeStack
-  macNotificationsRemoveAllObservers
-  macWorkspaceRemoveAllObservers
+   macNotificationsRemoveAllObservers
+   macWorkspaceRemoveAllObservers
 end closeStack
 
 Tags: mac, notifications, system, workspace
-
----
-
-Name: macNotificationsPostTest
-Type: command
-Syntax: macNotificationsPostTest
-Summary: Post a test distributed notification for development purposes.
-Description:
-Posts a distributed notification named `test.notification` via NSDistributedNotificationCenter.
-Register an observer for `"test.notification"` before calling this to verify the callback
-pipeline is working end-to-end.
-
-This handler is intended for development use only and should not be called in production.
-
-Example:
-macNotificationsAddObserver "test.notification"
-macNotificationsPostTest
--- triggers: on macNotification pName, pUserInfo with pName = "test.notification"
-
-Tags: mac, notifications, debug, test

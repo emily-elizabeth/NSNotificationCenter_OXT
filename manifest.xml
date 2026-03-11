@@ -2,7 +2,7 @@
   <name>org.openxtalk.nsnotificationcenter</name>
   <title>NSNotificationCenter Library</title>
   <author>Emily-Elizabeth Howard</author>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <platforms>mac</platforms>
   <license>community</license>
   <type>library</type>
@@ -16,5 +16,6 @@
   <handler name="macWorkspaceAddObserver" parameters="in string" return="nothing"/>
   <handler name="macWorkspaceRemoveObserver" parameters="in string" return="nothing"/>
   <handler name="macWorkspaceRemoveAllObservers" parameters="" return="nothing"/>
+  <handler name="macNotificationsPost" parameters="in string" return="nothing"/>
   <handler name="macNotificationsPostTest" parameters="" return="nothing"/>
 </package>

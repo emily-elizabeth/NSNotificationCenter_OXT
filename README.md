@@ -117,6 +117,26 @@ on closeStack
 end closeStack
 ```
 
+### Broadcasting a notification
+
+Use `macNotificationsPost` to broadcast a distributed notification to any application listening for it — including other stacks or other instances of your own app. Use a reverse-DNS style name to avoid collisions with system notifications.
+
+```livecode
+macNotificationsPost "com.mycompany.myapp.dataUpdated"
+```
+
+Any stack that has registered an observer for that name will receive it:
+
+```livecode
+macNotificationsAddObserver "com.mycompany.myapp.dataUpdated"
+
+on macNotification pName, pUserInfo
+  if pName is "com.mycompany.myapp.dataUpdated" then
+    -- refresh data
+  end if
+end macNotification
+```
+
 ### Testing the callback pipeline
 
 ```livecode
