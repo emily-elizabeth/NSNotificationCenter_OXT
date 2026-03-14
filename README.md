@@ -117,6 +117,23 @@ on closeStack
 end closeStack
 ```
 
+### Local notifications
+
+Use `macLocalAddObserver` for notifications posted to `[NSNotificationCenter defaultCenter]` within your process. This covers NSApplication lifecycle events — hide, unhide, resign/become active — and window events. Safe to call directly from `openStack`, no deferred send needed.
+
+```livecode
+on openStack
+   macLocalAddObserver "NSApplicationWillHideNotification"
+   macLocalAddObserver "NSApplicationDidUnhideNotification"
+   macLocalAddObserver "NSApplicationWillResignActiveNotification"
+   macLocalAddObserver "NSApplicationDidBecomeActiveNotification"
+end openStack
+
+on closeStack
+   macLocalRemoveAllObservers
+end closeStack
+```
+
 ### Broadcasting a notification
 
 Use `macNotificationsPost` to broadcast a distributed notification to any application listening for it — including other stacks or other instances of your own app. Use a reverse-DNS style name to avoid collisions with system notifications.
@@ -184,7 +201,15 @@ constant kMacNotifyVolumeUnmounted    = "NSWorkspaceDidUnmountNotification"
 | `com.apple.screenIsUnlocked` | ✅ Verified |
 | `com.apple.iTunes.playerInfo` | ⚠️ Legacy, iTunes only |
 
-### Workspace (use with `macWorkspaceAddObserver`)
+### Local (use with `macLocalAddObserver`)
+
+| Notification Name String | Notes |
+|---|---|
+| `NSApplicationWillHideNotification` | ✅ Verified |
+| `NSApplicationDidHideNotification` | ✅ Verified |
+| `NSApplicationDidUnhideNotification` | ✅ Verified |
+| `NSApplicationWillResignActiveNotification` | ✅ Verified |
+| `NSApplicationDidBecomeActiveNotification` | ✅ Verified |
 
 | Notification Name String | Notes |
 |---|---|

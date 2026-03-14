@@ -39,6 +39,13 @@ void lcb_notifications_add_distributed(const char *name);
 void lcb_notifications_add_workspace(const char *name);
 
 /**
+ * Register a local (per-process) notification observer by name.
+ * Use for: NSApplication hide/unhide, window events, and any notification
+ * posted to [NSNotificationCenter defaultCenter].
+ */
+void lcb_notifications_add_local(const char *name);
+
+/**
  * Remove a single distributed notification observer by name.
  */
 void lcb_notifications_remove_distributed(const char *name);
@@ -49,6 +56,11 @@ void lcb_notifications_remove_distributed(const char *name);
 void lcb_notifications_remove_workspace(const char *name);
 
 /**
+ * Remove a single local notification observer by name.
+ */
+void lcb_notifications_remove_local(const char *name);
+
+/**
  * Remove all registered distributed notification observers.
  */
 void lcb_notifications_remove_all_distributed(void);
@@ -57,6 +69,11 @@ void lcb_notifications_remove_all_distributed(void);
  * Remove all registered workspace notification observers.
  */
 void lcb_notifications_remove_all_workspace(void);
+
+/**
+ * Remove all registered local notification observers.
+ */
+void lcb_notifications_remove_all_local(void);
 
 /**
  * Post a test notification to the distributed center.

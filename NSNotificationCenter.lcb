@@ -22,7 +22,7 @@
 
 library org.openxtalk.nsnotificationcenter
 
-metadata version is "1.1.0"
+metadata version is "1.2.0"
 metadata author is "Emily-Elizabeth Howard"
 metadata title is "NSNotificationCenter Library"
 metadata platforms is "mac"
@@ -72,6 +72,20 @@ foreign handler Glue_RemoveAllDistributed() \
 foreign handler Glue_RemoveAllWorkspace() \
     returns nothing \
     binds to "c:NSNotificationGlue>lcb_notifications_remove_all_workspace"
+
+foreign handler Glue_AddLocal( \
+    in pName as ZStringNative) \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_add_local"
+
+foreign handler Glue_RemoveLocal( \
+    in pName as ZStringNative) \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_remove_local"
+
+foreign handler Glue_RemoveAllLocal() \
+    returns nothing \
+    binds to "c:NSNotificationGlue>lcb_notifications_remove_all_local"
 
 foreign handler Glue_PostDistributed( \
     in pName as ZStringNative) \
@@ -167,6 +181,33 @@ end handler
 public handler macNotificationsPostTest() returns nothing
     unsafe
         Glue_PostDistributed("test.notification")
+    end unsafe
+end handler
+
+-- -------------------------------------------------------------------------
+-- Local notification center API
+-- Use for: NSApplication hide/unhide, window events, and any notification
+-- posted to [NSNotificationCenter defaultCenter] within the process.
+-- Safe to call from openStack — no deferred send required.
+-- -------------------------------------------------------------------------
+
+public handler macLocalAddObserver(in pName as String) returns nothing
+    put the caller into mTarget
+    EnsureCallbackRegistered()
+    unsafe
+        Glue_AddLocal(pName)
+    end unsafe
+end handler
+
+public handler macLocalRemoveObserver(in pName as String) returns nothing
+    unsafe
+        Glue_RemoveLocal(pName)
+    end unsafe
+end handler
+
+public handler macLocalRemoveAllObservers() returns nothing
+    unsafe
+        Glue_RemoveAllLocal()
     end unsafe
 end handler
 

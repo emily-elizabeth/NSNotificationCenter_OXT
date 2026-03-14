@@ -3,9 +3,10 @@
  *
  * Objective-C glue library for NSNotificationCenter.lcb
  *
- * Handles all NSDistributedNotificationCenter and NSWorkspace notification
- * registration. When a notification fires, converts the name and userInfo
- * to plain C strings and calls back into LCB via a function pointer.
+ * Handles NSDistributedNotificationCenter, NSWorkspace, and local
+ * (per-process) NSNotificationCenter registration. When a notification
+ * fires, converts the name and userInfo to plain C strings and calls
+ * back into LCB via a function pointer.
  *
  * Build as a dynamic library and place alongside the .lcb extension:
  *
@@ -65,6 +66,7 @@ static NotificationCallbackType sNotificationCallback = NULL;
 static LCBNotificationObserver *sObserver         = nil;
 static NSMutableDictionary     *sDistTokens       = nil; // name -> token
 static NSMutableDictionary     *sWorkspaceTokens  = nil; // name -> token
+static NSMutableDictionary     *sLocalTokens      = nil; // name -> token
 
 // ---------------------------------------------------------------------------
 // C API called from LCB
@@ -77,6 +79,7 @@ void lcb_notifications_set_callback(void *callback) {
         sObserver        = [[LCBNotificationObserver alloc] init];
         sDistTokens      = [NSMutableDictionary dictionary];
         sWorkspaceTokens = [NSMutableDictionary dictionary];
+        sLocalTokens     = [NSMutableDictionary dictionary];
     }
 }
 
@@ -156,6 +159,44 @@ void lcb_notifications_remove_all_workspace(void) {
         [center removeObserver:token];
     }
     [sWorkspaceTokens removeAllObjects];
+}
+
+// Register a local (per-process) notification by name.
+void lcb_notifications_add_local(const char *name) {
+    if (!sObserver || !name) return;
+    NSString *nsName = [NSString stringWithUTF8String:name];
+    if (sLocalTokens[nsName]) return; // already registered
+
+    id token = [[NSNotificationCenter defaultCenter]
+        addObserverForName:nsName
+                    object:nil
+                     queue:nil
+                usingBlock:^(NSNotification *note) {
+        [sObserver handleNotification:note];
+    }];
+    if (token) {
+        sLocalTokens[nsName] = token;
+    }
+}
+
+// Remove a local observer by name.
+void lcb_notifications_remove_local(const char *name) {
+    if (!sLocalTokens || !name) return;
+    NSString *nsName = [NSString stringWithUTF8String:name];
+    id token = sLocalTokens[nsName];
+    if (token) {
+        [[NSNotificationCenter defaultCenter] removeObserver:token];
+        [sLocalTokens removeObjectForKey:nsName];
+    }
+}
+
+// Remove all local observers.
+void lcb_notifications_remove_all_local(void) {
+    if (!sLocalTokens) return;
+    for (id token in sLocalTokens.allValues) {
+        [[NSNotificationCenter defaultCenter] removeObserver:token];
+    }
+    [sLocalTokens removeAllObjects];
 }
 
 // Post a distributed notification — used for testing.

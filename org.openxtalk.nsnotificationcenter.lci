@@ -12,4 +12,7 @@ import module org.openxtalk.nsnotificationcenter
   handler macWorkspaceRemoveAllObservers() returns nothing
   handler macNotificationsPost(in pName as String) returns nothing
   handler macNotificationsPostTest() returns nothing
+  handler macLocalAddObserver(in pName as String) returns nothing
+  handler macLocalRemoveObserver(in pName as String) returns nothing
+  handler macLocalRemoveAllObservers() returns nothing
 end module

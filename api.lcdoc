@@ -189,3 +189,81 @@ on closeStack
 end closeStack
 
 Tags: mac, notifications, system, workspace
+
+---
+
+Name: macLocalAddObserver
+Type: command
+Syntax: macLocalAddObserver <pName>
+Summary: Register an observer for a local (per-process) NSNotificationCenter notification.
+Parameters:
+pName: The notification name string to observe.
+Description:
+Registers the calling script object as a listener for the named notification on
+[NSNotificationCenter defaultCenter]. When the notification fires, a `macNotification`
+message is sent to the calling object with two parameters: the notification name and
+a string representation of the userInfo dictionary.
+
+Use this for notifications posted within the same process — NSApplication lifecycle
+events (hide, unhide, resign active, become active), window events, and any other
+notification posted to the default local center.
+
+Unlike macWorkspaceAddObserver, this is safe to call directly from openStack with
+no deferred send required.
+
+Example:
+on openStack
+   macLocalAddObserver "NSApplicationWillHideNotification"
+   macLocalAddObserver "NSApplicationDidUnhideNotification"
+   macLocalAddObserver "NSApplicationWillResignActiveNotification"
+   macLocalAddObserver "NSApplicationDidBecomeActiveNotification"
+end openStack
+
+on macNotification pName, pUserInfo
+   switch pName
+      case "NSApplicationWillHideNotification"
+         -- app is about to be hidden
+         break
+      case "NSApplicationDidUnhideNotification"
+         -- app has been shown again
+         break
+   end switch
+end macNotification
+
+Tags: mac, notifications, local, application
+
+---
+
+Name: macLocalRemoveObserver
+Type: command
+Syntax: macLocalRemoveObserver <pName>
+Summary: Remove a single local notification observer by name.
+Parameters:
+pName: The notification name string previously passed to macLocalAddObserver.
+Description:
+Removes the observer registered for the given local notification name.
+Has no effect if the name was not previously registered.
+
+Example:
+macLocalRemoveObserver "NSApplicationWillHideNotification"
+
+Tags: mac, notifications, local
+
+---
+
+Name: macLocalRemoveAllObservers
+Type: command
+Syntax: macLocalRemoveAllObservers
+Summary: Remove all local notification observers.
+Description:
+Removes all observers previously registered with `macLocalAddObserver`.
+Call this in `closeStack` or when the object no longer needs to receive local notifications.
+
+Example:
+on closeStack
+   macNotificationsRemoveAllObservers
+   macWorkspaceRemoveAllObservers
+   macLocalRemoveAllObservers
+end closeStack
+
+Tags: mac, notifications, local
